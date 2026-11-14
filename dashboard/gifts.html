@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Discovery Catalog — Forget Me Not</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+    <div class="dashboard-layout" id="dashboard-app"></div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDashboardSidebar('gifts');
+            document.getElementById('page-heading').textContent = 'Gift Discovery Catalog';
+
+            const mainBody = document.getElementById('dashboard-main-body');
+
+            function renderCatalog() {
+                const curated = Storage.getCuratedGifts();
+                const savedGifts = Storage.getSavedGifts();
+
+                mainBody.innerHTML = `
+                    <div class="animate-fade-in">
+                        <div class="dashboard-section-header">
+                            <div>
+                                <h2 style="font-size: 1.75rem; margin-bottom: var(--space-xs);">Curated Gift Collection</h2>
+                                <p style="color: var(--color-muted);">Explore hand-selected luxury and thoughtful gifts across categories.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-xl);">
+                            ${curated.map(gift => {
+                                const isSaved = savedGifts.includes(gift.id);
+                                return `
+                                    <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+                                        <div style="position: relative; height: 220px; background-color: #eee;">
+                                            <img src="${gift.image}" alt="${gift.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                                            <button class="btn save-gift-btn" data-id="${gift.id}" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.9); padding: 0.5rem; border-radius: 50%;">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="${isSaved ? 'var(--color-primary)' : 'none'}" stroke="var(--color-primary)" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                                            </button>
+                                        </div>
+                                        <div style="padding: var(--space-lg); display: flex; flex-direction: column; flex-grow: 1;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xs);">
+                                                <span class="badge badge-secondary">${gift.category}</span>
+                                                <span style="font-family: var(--font-serif); font-size: 1.2rem; font-weight: 600; color: var(--color-primary);">${gift.price.toFixed(2)} ${gift.currency}</span>
+                                            </div>
+                                            <h3 style="font-size: 1.15rem; margin-bottom: var(--space-sm);">${gift.name}</h3>
+                                            <p style="color: var(--color-muted); font-size: 0.9rem; margin-bottom: var(--space-lg); flex-grow: 1;">${gift.description}</p>
+                                            <a href="${gift.link}" target="_blank" class="btn btn-primary btn-sm" style="width: 100%;">View Product Link</a>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+
+                document.querySelectorAll('.save-gift-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const giftId = btn.getAttribute('data-id');
+                        Storage.toggleSaveGift(giftId);
+                        renderCatalog();
+                    });
+                });
+            }
+
+            renderCatalog();
+        });
+    </script>
+</body>
+</html>

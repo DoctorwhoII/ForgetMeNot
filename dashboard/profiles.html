@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relationship Profiles — Forget Me Not</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+    <div class="dashboard-layout" id="dashboard-app"></div>
+
+    <!-- Add/Edit Profile Modal -->
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Relationship Profile</h3>
+                <button class="modal-close" id="close-modal">&times;</button>
+            </div>
+            <form id="profile-form">
+                <input type="hidden" id="profile-id">
+                <div class="form-group">
+                    <label class="form-label" for="prof-name">Person's Name</label>
+                    <input type="text" id="prof-name" class="form-input" required placeholder="e.g. Fatima Al-Mahmoud">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="prof-relationship">Relationship</label>
+                    <select id="prof-relationship" class="form-select" required>
+                        <option value="Mother">Mother</option>
+                        <option value="Father">Father</option>
+                        <option value="Partner">Partner</option>
+                        <option value="Best Friend">Best Friend</option>
+                        <option value="Sister">Sister</option>
+                        <option value="Brother">Brother</option>
+                        <option value="Colleague">Colleague</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="prof-desc">Description & Notes</label>
+                    <textarea id="prof-desc" class="form-textarea" rows="3" placeholder="Appreciates traditional elegance, handmade crafts..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="prof-interests">Interests (comma separated)</label>
+                    <input type="text" id="prof-interests" class="form-input" placeholder="Fine Teas, Gardening, Pottery">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="prof-budget">Approximate Gift Budget</label>
+                    <input type="text" id="prof-budget" class="form-input" placeholder="e.g. 50-100 BHD">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Profile</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDashboardSidebar('profiles');
+            document.getElementById('page-heading').textContent = 'Relationship Profiles';
+
+            const mainBody = document.getElementById('dashboard-main-body');
+            const modalOverlay = document.getElementById('profile-modal');
+            const openModalBtn = document.getElementById('open-profile-modal');
+
+            function renderProfilesPage() {
+                const user = Storage.getUser();
+                const profiles = Storage.getProfiles();
+                const isFree = user.tier === 'FREE';
+
+                mainBody.innerHTML = `
+                    <div class="animate-fade-in">
+                        <div class="dashboard-section-header">
+                            <div>
+                                <h2 style="font-size: 1.75rem; margin-bottom: var(--space-xs);">Your Relationship Profiles</h2>
+                                <p style="color: var(--color-muted);">Manage people you care about (${profiles.length}/${isFree ? '3 limit on Free Plan' : 'Unlimited'}).</p>
+                            </div>
+                            <button id="add-profile-btn" class="btn btn-primary">+ Add New Profile</button>
+                        </div>
+
+                        ${isFree && profiles.length >= 3 ? `
+                            <div style="background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-lg); margin-bottom: var(--space-xl); display: flex; align-items: center; justify-content: space-between;">
+                                <div>
+                                    <h4 style="font-size: 1.05rem; margin-bottom: var(--space-xs);">Free Plan Limit Reached</h4>
+                                    <p style="color: var(--color-muted); font-size: 0.9rem;">You have reached the 3-profile limit on your Free plan. Upgrade to Standard (10 profiles) or Premium (Unlimited).</p>
+                                </div>
+                                <a href="settings.html" class="btn btn-primary btn-sm">Upgrade Plan</a>
+                            </div>
+                        ` : ''}
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-xl);">
+                            ${profiles.map(prof => `
+                                <div class="card">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md);">
+                                        <div>
+                                            <h3 style="font-size: 1.25rem; margin-bottom: 2px;">${prof.name}</h3>
+                                            <span class="badge badge-primary">${prof.relationship}</span>
+                                        </div>
+                                        <div style="display: flex; gap: var(--space-sm);">
+                                            <button class="btn btn-secondary btn-sm edit-btn" data-id="${prof.id}">Edit</button>
+                                            <button class="btn btn-secondary btn-sm delete-btn" data-id="${prof.id}" style="color: var(--color-danger); border-color: rgba(163, 107, 107, 0.3);">Delete</button>
+                                        </div>
+                                    </div>
+                                    <p style="color: var(--color-muted); font-size: 0.95rem; margin-bottom: var(--space-md);">${prof.description || 'No notes added.'}</p>
+                                    <div style="margin-bottom: var(--space-md);">
+                                        <strong style="font-size: 0.85rem; display: block; margin-bottom: var(--space-xs);">Interests:</strong>
+                                        <div style="display: flex; gap: var(--space-xs); flex-wrap: wrap;">
+                                            ${(prof.interests || []).map(i => `<span class="badge badge-secondary">${i}</span>`).join('')}
+                                        </div>
+                                    </div>
+                                    <div style="font-size: 0.85rem; color: var(--color-muted); border-top: 1px solid var(--color-border); padding-top: var(--space-md); display: flex; justify-content: space-between;">
+                                        <span>Budget: <strong>${prof.budget || 'Not set'}</strong></span>
+                                        <a href="occasions.html" style="color: var(--color-primary); font-weight: 600;">View Occasions &rarr;</a>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                // Bind events
+                document.getElementById('add-profile-btn').addEventListener('click', () => {
+                    document.getElementById('modal-title').textContent = 'Add Relationship Profile';
+                    document.getElementById('profile-id').value = '';
+                    document.getElementById('profile-form').reset();
+                    modalOverlay.classList.add('active');
+                });
+
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-id');
+                        const profiles = Storage.getProfiles();
+                        const p = profiles.find(item => item.id === id);
+                        if (p) {
+                            document.getElementById('modal-title').textContent = 'Edit Profile: ' + p.name;
+                            document.getElementById('profile-id').value = p.id;
+                            document.getElementById('prof-name').value = p.name;
+                            document.getElementById('prof-relationship').value = p.relationship;
+                            document.getElementById('prof-desc').value = p.description || '';
+                            document.getElementById('prof-interests').value = (p.interests || []).join(', ');
+                            document.getElementById('prof-budget').value = p.budget || '';
+                            modalOverlay.classList.add('active');
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (confirm('Are you sure you want to delete this profile and its associated occasions?')) {
+                            const id = btn.getAttribute('data-id');
+                            Storage.deleteProfile(id);
+                            renderProfilesPage();
+                        }
+                    });
+                });
+            }
+
+            renderProfilesPage();
+
+            document.getElementById('close-modal').addEventListener('click', () => {
+                modalOverlay.classList.remove('active');
+            });
+
+            document.getElementById('profile-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const id = document.getElementById('profile-id').value;
+                const name = document.getElementById('prof-name').value;
+                const relationship = document.getElementById('prof-relationship').value;
+                const description = document.getElementById('prof-desc').value;
+                const interests = document.getElementById('prof-interests').value.split(',').map(s => s.trim()).filter(Boolean);
+                const budget = document.getElementById('prof-budget').value;
+
+                const profileData = { name, relationship, description, interests, budget };
+
+                try {
+                    if (id) {
+                        Storage.updateProfile(id, profileData);
+                    } else {
+                        Storage.addProfile(profileData);
+                    }
+                    modalOverlay.classList.remove('active');
+                    renderProfilesPage();
+                } catch (err) {
+                    alert(err.message);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

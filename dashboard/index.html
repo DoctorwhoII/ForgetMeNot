@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Forget Me Not</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+    <div class="dashboard-layout" id="dashboard-app">
+        <!-- Rendered via navigation.js -->
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDashboardSidebar('dashboard');
+            document.getElementById('page-heading').textContent = 'Dashboard Overview';
+
+            const user = Storage.getUser();
+            const profiles = Storage.getProfiles();
+            const occasions = Storage.getOccasions();
+            const savedGifts = Storage.getSavedGifts();
+
+            const mainBody = document.getElementById('dashboard-main-body');
+            mainBody.innerHTML = `
+                <div class="animate-fade-in">
+                    <div style="margin-bottom: var(--space-2xl);">
+                        <h2 style="font-size: 1.75rem; margin-bottom: var(--space-xs);">Welcome back, ${user.name}</h2>
+                        <p style="color: var(--color-muted);">Here is a summary of your relationship profiles, upcoming occasions, and saved gifts.</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Relationship Profiles</h3>
+                            <div class="stat-value">${profiles.length} <span style="font-size: 1rem; color: var(--color-muted); font-family: var(--font-sans);">/ ${user.tier === 'FREE' ? '3 max' : 'Unlimited'}</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Upcoming Occasions</h3>
+                            <div class="stat-value">${occasions.length}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Saved Gifts</h3>
+                            <div class="stat-value">${savedGifts.length}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Subscription Tier</h3>
+                            <div class="stat-value" style="font-size: 1.5rem; color: var(--color-primary);">${user.tier}</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div>
+                            <div class="dashboard-section-header">
+                                <h2>Upcoming Occasions</h2>
+                                <a href="occasions.html" class="btn btn-secondary btn-sm">View All</a>
+                            </div>
+                            <div class="card" style="padding: 0; overflow: hidden;">
+                                <div class="table-container">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Occasion</th>
+                                                <th>Recipient</th>
+                                                <th>Date</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${occasions.map(occ => {
+                                                const prof = profiles.find(p => p.id === occ.profileId);
+                                                return `
+                                                    <tr>
+                                                        <td><strong>${occ.name}</strong></td>
+                                                        <td>${prof ? prof.name : 'General'}</td>
+                                                        <td>${occ.date}</td>
+                                                        <td>
+                                                            <a href="occasion-detail.html?id=${occ.id}" class="btn btn-primary btn-sm">Open Event</a>
+                                                        </td>
+                                                    </tr>
+                                                `;
+                                            }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="dashboard-section-header">
+                                <h2>Relationship Profiles</h2>
+                                <a href="profiles.html" class="btn btn-secondary btn-sm">Manage</a>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+                                ${profiles.map(prof => `
+                                    <div class="card" style="padding: var(--space-lg);">
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-xs);">
+                                            <h3 style="font-size: 1.1rem;">${prof.name}</h3>
+                                            <span class="badge badge-primary">${prof.relationship}</span>
+                                        </div>
+                                        <p style="color: var(--color-muted); font-size: 0.9rem; margin-bottom: var(--space-md);">${prof.description || 'No description provided.'}</p>
+                                        <a href="profiles.html" style="color: var(--color-primary); font-weight: 600; font-size: 0.85rem;">View Profile &rarr;</a>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

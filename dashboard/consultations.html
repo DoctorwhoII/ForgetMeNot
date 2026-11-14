@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultations — Forget Me Not</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+    <div class="dashboard-layout" id="dashboard-app"></div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDashboardSidebar('consultations');
+            document.getElementById('page-heading').textContent = 'Gifting Consultations';
+
+            const mainBody = document.getElementById('dashboard-main-body');
+            const consultations = Storage.getConsultations();
+
+            mainBody.innerHTML = `
+                <div class="animate-fade-in">
+                    <div class="dashboard-section-header">
+                        <div>
+                            <h2 style="font-size: 1.75rem; margin-bottom: var(--space-xs);">Your Consultation Requests</h2>
+                            <p style="color: var(--color-muted);">Personalised gifting guidance from our expert concierge and advisory service.</p>
+                        </div>
+                        <a href="occasions.html" class="btn btn-primary">+ Request New Consultation</a>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: var(--space-lg);">
+                        ${consultations.map(c => `
+                            <div class="card">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md);">
+                                    <div>
+                                        <span class="badge badge-primary" style="margin-bottom: var(--space-xs); display: inline-block;">${c.type}</span>
+                                        <h3 style="font-size: 1.25rem;">${c.occasionName} — ${c.profileName}</h3>
+                                    </div>
+                                    <span class="badge ${c.status === 'Completed' ? 'badge-primary' : 'badge-accent'}">${c.status}</span>
+                                </div>
+                                <p style="color: var(--color-muted); font-size: 0.95rem; margin-bottom: var(--space-md);">Instructions: "${c.notes || 'No specific instructions provided.'}"</p>
+                                <div style="font-size: 0.85rem; color: var(--color-muted); border-top: 1px solid var(--color-border); padding-top: var(--space-md); display: flex; justify-content: space-between;">
+                                    <span>Budget: <strong>${c.budget}</strong></span>
+                                    <span>Requested on: <strong>${c.date}</strong></span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

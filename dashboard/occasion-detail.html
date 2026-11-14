@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event & Gift Discovery — Forget Me Not</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+    <div class="dashboard-layout" id="dashboard-app"></div>
+
+    <!-- Consultation Modal -->
+    <div class="modal-overlay" id="consultation-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Request Personalised Gifting Consultation</h3>
+                <button class="modal-close" id="close-consultation-modal">&times;</button>
+            </div>
+            <form id="consultation-form">
+                <div class="form-group">
+                    <label class="form-label" for="cons-type">Consultation Type</label>
+                    <select id="cons-type" class="form-select" required>
+                        <option value="Text Consultation">Text Consultation (Chat & Curated Brief)</option>
+                        <option value="Call Consultation">Call Consultation (15-min Voice Concierge)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="cons-instructions">Additional Instructions / Preferences</label>
+                    <textarea id="cons-instructions" class="form-textarea" rows="4" placeholder="Share specific preferences, delivery dates, or custom requests..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Consultation Request</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDashboardSidebar('occasions');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const occasionId = urlParams.get('id');
+
+            const occasions = Storage.getOccasions();
+            const profiles = Storage.getProfiles();
+            const occasion = occasions.find(o => o.id === occasionId) || occasions[0];
+            const recipient = profiles.find(p => p.id === (occasion ? occasion.profileId : '')) || profiles[0];
+
+            document.getElementById('page-heading').textContent = occasion ? occasion.name : 'Event Page';
+
+            const mainBody = document.getElementById('dashboard-main-body');
+
+            function renderEventPage() {
+                const curatedGifts = Storage.getCuratedGifts();
+                const savedGifts = Storage.getSavedGifts();
+
+                // Filter recommendations based on recipient interests/tags
+                const recipientInterests = recipient ? (recipient.interests || []) : [];
+                const matchedGifts = curatedGifts.filter(gift => {
+                    return gift.tags.some(tag => recipientInterests.includes(tag) || (recipient && recipient.relationship && tag === recipient.relationship));
+                });
+                const displayGifts = matchedGifts.length > 0 ? matchedGifts : curatedGifts;
+
+                mainBody.innerHTML = `
+                    <div class="animate-fade-in">
+                        <!-- Event Overview Banner -->
+                        <div class="card" style="background: linear-gradient(135deg, var(--color-surface-card) 0%, var(--color-surface) 100%); margin-bottom: var(--space-2xl); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-lg);">
+                            <div>
+                                <span class="badge badge-primary" style="margin-bottom: var(--space-sm); display: inline-block;">${occasion ? occasion.type : 'Occasion'}</span>
+                                <h2 style="font-size: 2rem; margin-bottom: var(--space-xs);">${occasion ? occasion.name : 'Special Occasion'}</h2>
+                                <p style="color: var(--color-muted); font-size: 1.05rem;">Recipient: <strong>${recipient ? recipient.name : 'General'} (${recipient ? recipient.relationship : 'Recipient'})</strong> &bull; Date: <strong>${occasion ? occasion.date : 'TBD'}</strong></p>
+                                ${occasion && occasion.notes ? `<p style="margin-top: var(--space-md); font-size: 0.95rem; font-style: italic;">Notes: "${occasion.notes}"</p>` : ''}
+                            </div>
+                            <div style="display: flex; gap: var(--space-md);">
+                                <button id="request-consultation-btn" class="btn btn-secondary">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                    Request Agent Consultation
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Option A: Explore Products & Recommendations -->
+                        <div class="dashboard-section-header">
+                            <div>
+                                <h2 style="font-size: 1.5rem;">Option A: Explore Curated Recommendations</h2>
+                                <p style="color: var(--color-muted);">Tailored specifically for ${recipient ? recipient.name : 'this recipient'} based on their saved preferences and budget.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-xl); margin-bottom: var(--space-3xl);">
+                            ${displayGifts.map(gift => {
+                                const isSaved = savedGifts.includes(gift.id);
+                                return `
+                                    <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+                                        <div style="position: relative; height: 220px; background-color: #eee;">
+                                            <img src="${gift.image}" alt="${gift.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                                            <button class="btn save-gift-btn" data-id="${gift.id}" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.9); padding: 0.5rem; border-radius: 50%;">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="${isSaved ? 'var(--color-primary)' : 'none'}" stroke="var(--color-primary)" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                                            </button>
+                                        </div>
+                                        <div style="padding: var(--space-lg); display: flex; flex-direction: column; flex-grow: 1;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xs);">
+                                                <span class="badge badge-secondary">${gift.category}</span>
+                                                <span style="font-family: var(--font-serif); font-size: 1.2rem; font-weight: 600; color: var(--color-primary);">${gift.price.toFixed(2)} ${gift.currency}</span>
+                                            </div>
+                                            <h3 style="font-size: 1.15rem; margin-bottom: var(--space-sm);">${gift.name}</h3>
+                                            <p style="color: var(--color-muted); font-size: 0.9rem; margin-bottom: var(--space-lg); flex-grow: 1;">${gift.description}</p>
+                                            <div style="display: flex; gap: var(--space-md);">
+                                                <a href="${gift.link}" target="_blank" class="btn btn-primary btn-sm" style="flex-grow: 1;">View Product Link</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <!-- Option B: Agent Consultation Section Banner -->
+                        <div class="card" style="background: var(--color-surface); text-align: center; padding: var(--space-2xl);">
+                            <h3 style="font-size: 1.5rem; margin-bottom: var(--space-sm);">Option B: Need Personalised Gifting Assistance?</h3>
+                            <p style="color: var(--color-muted); max-width: 600px; margin: 0 auto var(--space-xl);">Connect with our gifting concierge service (Text consultation or 15-minute voice call) to source rare or bespoke items.</p>
+                            <button id="banner-consultation-btn" class="btn btn-primary">Request Consultation</button>
+                        </div>
+                    </div>
+                `;
+
+                // Bind save gift toggle
+                document.querySelectorAll('.save-gift-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const giftId = btn.getAttribute('data-id');
+                        Storage.toggleSaveGift(giftId);
+                        renderEventPage();
+                    });
+                });
+            }
+
+            renderEventPage();
+
+            const consultationModal = document.getElementById('consultation-modal');
+            const openConsultation = () => consultationModal.classList.add('active');
+            const closeConsultation = () => consultationModal.classList.remove('active');
+
+            document.getElementById('close-consultation-modal').addEventListener('click', closeConsultation);
+            document.addEventListener('click', (e) => {
+                if (e.target && (e.target.id === 'request-consultation-btn' || e.target.id === 'banner-consultation-btn')) {
+                    openConsultation();
+                }
+            });
+
+            document.getElementById('consultation-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const type = document.getElementById('cons-type').value;
+                const notes = document.getElementById('cons-instructions').value;
+
+                Storage.addConsultation({
+                    profileName: recipient ? recipient.name : 'General',
+                    occasionName: occasion ? occasion.name : 'Occasion',
+                    type,
+                    budget: recipient ? recipient.budget : '50-100 BHD',
+                    notes
+                });
+
+                closeConsultation();
+                alert('Consultation request submitted successfully! Our concierge team will review your instructions and contact you shortly.');
+                window.location.href = 'consultations.html';
+            });
+        });
+    </script>
+</body>
+</html>

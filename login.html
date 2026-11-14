@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Forget Me Not</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+
+    <header class="public-nav">
+        <div class="container nav-container">
+            <a href="index.html" class="nav-logo">
+                Forget <span>Me Not</span>
+            </a>
+            <div class="nav-actions">
+                <a href="signup.html" class="btn btn-primary btn-sm">Create Account</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="auth-page">
+        <div class="auth-card animate-fade-in">
+            <div class="auth-header">
+                <h1>Welcome Back</h1>
+                <p>Sign in to access your dashboard and relationship profiles</p>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" class="form-input" value="sarah@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-input" value="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+            </form>
+            <div class="auth-footer">
+                Don't have an account? <a href="signup.html">Sign up for free</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/storage.js"></script>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Redirect to dashboard overview
+            window.location.href = 'dashboard/index.html';
+        });
+    </script>
+</body>
+</html>
